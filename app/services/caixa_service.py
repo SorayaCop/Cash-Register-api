@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from app.extensions import db
 from app.models.movimentacao import Movimentacao
 from app.models.fechamento import Fechamento
@@ -44,8 +45,18 @@ def criar_movimentacao(data):
     }, 201
 
 
-def listar_movimentacoes():
-    movimentacoes = Movimentacao.query.order_by(Movimentacao.criado_em.desc()).all()
+def listar_movimentacoes(data_inicio=None, data_fim=None):
+    query = Movimentacao.query
+
+    if data_inicio:
+        data_inicio_obj = datetime.strptime(data_inicio, "%Y-%m-%d")
+        query = query.filter(Movimentacao.criado_em >= data_inicio_obj)
+
+    if data_fim:
+        data_fim_obj = datetime.strptime(data_fim, "%Y-%m-%d") + timedelta(days=1)
+        query = query.filter(Movimentacao.criado_em < data_fim_obj)
+
+    movimentacoes = query.order_by(Movimentacao.criado_em.desc()).all()
 
     return [
         {

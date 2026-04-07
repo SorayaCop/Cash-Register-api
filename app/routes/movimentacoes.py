@@ -6,7 +6,10 @@ movimentacoes_bp = Blueprint("movimentacoes", __name__)
 
 @movimentacoes_bp.route("/movimentacoes", methods=["GET"])
 def obter_movimentacoes():
-    movimentacoes = listar_movimentacoes()
+    data_inicio = request.args.get("data_inicio")
+    data_fim = request.args.get("data_fim")
+
+    movimentacoes = listar_movimentacoes(data_inicio, data_fim)
     return jsonify(movimentacoes)
 
 
