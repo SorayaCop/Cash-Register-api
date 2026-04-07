@@ -63,6 +63,19 @@ def listar_movimentacoes():
 def calcular_fechamento(saldo_informado):
     movimentacoes = Movimentacao.query.all()
 
+    resumo_por_forma_pagamento = {}
+
+    for movimentacao in movimentacoes:
+        forma = movimentacao.forma_pagamento
+
+        if forma not in resumo_por_forma_pagamento:
+            resumo_por_forma_pagamento[forma] = 0
+
+        if movimentacao.tipo == "entrada":
+            resumo_por_forma_pagamento[forma] += movimentacao.valor
+        else:
+            resumo_por_forma_pagamento[forma] -= movimentacao.valor
+
     total_entrada = sum(
         movimentacao.valor
         for movimentacao in movimentacoes
@@ -96,7 +109,8 @@ def calcular_fechamento(saldo_informado):
         "saldo_esperado": fechamento.saldo_esperado,
         "saldo_informado": fechamento.saldo_informado,
         "diferenca": fechamento.diferenca,
-        "criado_em": fechamento.criado_em.isoformat()
+        "criado_em": fechamento.criado_em.isoformat(),
+        "resumo_por_forma_pagamento": resumo_por_forma_pagamento
     }
 
 
