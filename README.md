@@ -165,9 +165,3 @@ Este projeto foi desenvolvido para praticar:
 
 ---
 
-## 💡 Próximos passos
-
-* adicionar timestamps
-* resumo por forma de pagamento
-* filtros por período
-* testes automatizados
