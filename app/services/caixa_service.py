@@ -45,7 +45,7 @@ def criar_movimentacao(data):
 
 
 def listar_movimentacoes():
-    movimentacoes = Movimentacao.query.all()
+    movimentacoes = Movimentacao.query.order_by(Movimentacao.criado_em.desc()).all()
 
     return [
         {
@@ -115,7 +115,7 @@ def calcular_fechamento(saldo_informado):
 
 
 def listar_fechamentos():
-    fechamentos = Fechamento.query.all()
+    fechamentos = Fechamento.query.order_by(Fechamento.criado_em.desc()).all()
 
     return [
         {
