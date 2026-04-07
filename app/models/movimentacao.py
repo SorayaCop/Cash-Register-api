@@ -1,3 +1,4 @@
+from datetime import datetime
 from app.extensions import db
 
 
@@ -6,3 +7,4 @@ class Movimentacao(db.Model):
     tipo = db.Column(db.String(10), nullable=False)
     valor = db.Column(db.Float, nullable=False)
     forma_pagamento = db.Column(db.String(50), nullable=False)
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)

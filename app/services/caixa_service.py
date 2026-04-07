@@ -36,7 +36,8 @@ def criar_movimentacao(data):
         "id": movimentacao.id,
         "tipo": movimentacao.tipo,
         "valor": movimentacao.valor,
-        "forma_pagamento": movimentacao.forma_pagamento
+        "forma_pagamento": movimentacao.forma_pagamento,
+        "criado_em": movimentacao.criado_em.isoformat()
     }, 201
 
 
@@ -48,7 +49,8 @@ def listar_movimentacoes():
             "id": movimentacao.id,
             "tipo": movimentacao.tipo,
             "valor": movimentacao.valor,
-            "forma_pagamento": movimentacao.forma_pagamento
+            "forma_pagamento": movimentacao.forma_pagamento,
+            "criado_em": movimentacao.criado_em.isoformat()
         }
         for movimentacao in movimentacoes
     ]
@@ -89,7 +91,8 @@ def calcular_fechamento(saldo_informado):
         "total_saida": fechamento.total_saida,
         "saldo_esperado": fechamento.saldo_esperado,
         "saldo_informado": fechamento.saldo_informado,
-        "diferenca": fechamento.diferenca
+        "diferenca": fechamento.diferenca,
+        "criado_em": fechamento.criado_em.isoformat()
     }
 
 
@@ -103,7 +106,8 @@ def listar_fechamentos():
             "total_saida": f.total_saida,
             "saldo_esperado": f.saldo_esperado,
             "saldo_informado": f.saldo_informado,
-            "diferenca": f.diferenca
+            "diferenca": f.diferenca,
+            "criado_em": f.criado_em.isoformat()
         }
         for f in fechamentos
     ]

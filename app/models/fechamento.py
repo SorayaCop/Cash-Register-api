@@ -1,3 +1,4 @@
+from datetime import datetime
 from app.extensions import db
 
 
@@ -8,3 +9,4 @@ class Fechamento(db.Model):
     saldo_esperado = db.Column(db.Float, nullable=False)
     saldo_informado = db.Column(db.Float, nullable=False)
     diferenca = db.Column(db.Float, nullable=False)
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
