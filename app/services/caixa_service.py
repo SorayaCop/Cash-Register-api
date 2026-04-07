@@ -7,6 +7,7 @@ def criar_movimentacao(data):
     tipo = data.get("tipo")
     valor = data.get("valor")
     forma_pagamento = data.get("forma_pagamento")
+    descricao = data.get("descricao")
 
     if not tipo:
         return {"erro": "O campo 'tipo' é obrigatório."}, 400
@@ -26,7 +27,8 @@ def criar_movimentacao(data):
     movimentacao = Movimentacao(
         tipo=tipo,
         valor=valor,
-        forma_pagamento=forma_pagamento
+        forma_pagamento=forma_pagamento,
+        descricao=descricao
     )
 
     db.session.add(movimentacao)
@@ -37,6 +39,7 @@ def criar_movimentacao(data):
         "tipo": movimentacao.tipo,
         "valor": movimentacao.valor,
         "forma_pagamento": movimentacao.forma_pagamento,
+        "descricao": movimentacao.descricao,
         "criado_em": movimentacao.criado_em.isoformat()
     }, 201
 
@@ -50,6 +53,7 @@ def listar_movimentacoes():
             "tipo": movimentacao.tipo,
             "valor": movimentacao.valor,
             "forma_pagamento": movimentacao.forma_pagamento,
+            "descricao": movimentacao.descricao,
             "criado_em": movimentacao.criado_em.isoformat()
         }
         for movimentacao in movimentacoes

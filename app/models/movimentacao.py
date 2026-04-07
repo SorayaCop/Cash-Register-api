@@ -7,4 +7,5 @@ class Movimentacao(db.Model):
     tipo = db.Column(db.String(10), nullable=False)
     valor = db.Column(db.Float, nullable=False)
     forma_pagamento = db.Column(db.String(50), nullable=False)
+    descricao = db.Column(db.String(255), nullable=True)
     criado_em = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
