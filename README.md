@@ -38,7 +38,6 @@ requirements.txt
 
 ### Clonar repositório
 
-```bash
 git clone https://github.com/SorayaCop/Cash-Register-api.git
 cd Cash-Register-api
 
