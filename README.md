@@ -67,10 +67,14 @@ $env:FLASK_APP="run.py"
 flask db upgrade
 Executar API
 python run.py
+
+
 🔗 Base URL
 http://127.0.0.1:5000
+
 🩺 Health Check
 GET /health
+
 💰 Movimentações
 Criar movimentação
 POST /api/v1/movimentacoes
@@ -80,6 +84,8 @@ POST /api/v1/movimentacoes
   "forma_pagamento": "dinheiro",
   "descricao": "Suprimento"
 }
+
+
 Listar movimentações
 GET /api/v1/movimentacoes
 
@@ -87,6 +93,7 @@ Filtros opcionais:
 
 ?data_inicio=YYYY-MM-DD
 &data_fim=YYYY-MM-DD
+
 🧾 Fechamento de Caixa
 Criar fechamento
 POST /api/v1/fechamentos
@@ -95,14 +102,17 @@ POST /api/v1/fechamentos
   "data_inicio": "2024-01-01",
   "data_fim": "2030-01-01"
 }
+
 Listar fechamentos
 GET /api/v1/fechamentos
+
 📊 Resumo Financeiro
 GET /api/v1/resumo
 
 Exemplo:
 
 /api/v1/resumo?data_inicio=2024-01-01&data_fim=2030-01-01
+
 🔄 Padrão de Resposta
 Sucesso
 {
@@ -118,6 +128,7 @@ Erro
     "message": "Valor inválido"
   }
 }
+
 🧪 Testes
 pytest
 
