@@ -1,167 +1,128 @@
 # Cash Register API
 
-API REST para controle de movimentações financeiras e fechamento de caixa.
+API REST para controle de movimentações financeiras e fechamento de caixa, com validação de dados, regras de negócio, testes automatizados e histórico persistente.
 
-Este projeto simula um fluxo real de operação de caixa, permitindo registrar entradas e saídas, calcular o saldo esperado e comparar com o saldo informado no fechamento.
-
----
-
-## 📌 Funcionalidades
-
-* Registrar movimentações (entrada e saída)
-* Listar movimentações
-* Calcular fechamento de caixa
-* Registrar histórico de fechamentos
-* Listar fechamentos realizados
+Este projeto foi desenvolvido com o objetivo de demonstrar habilidades reais de desenvolvimento backend com Flask, indo além de um CRUD simples.
 
 ---
 
-## 🧠 Regra de negócio
+## 📌 Visão Geral
 
-O sistema:
+A API simula o funcionamento de um sistema de caixa:
 
-* armazena movimentações financeiras
-* calcula automaticamente:
-
-  * total de entradas
-  * total de saídas
-  * saldo esperado
-* compara com o saldo informado
-* retorna a diferença
-* registra o fechamento no banco
+- registro de entradas e saídas financeiras
+- filtragem por período
+- cálculo de fechamento de caixa
+- comparação entre saldo esperado e informado
+- resumo financeiro por forma de pagamento
 
 ---
 
-## 🚀 Tecnologias
+## 🚀 Funcionalidades
 
-* Python
-* Flask
-* SQLAlchemy
-* SQLite
+- API versionada (`/api/v1`)
+- Cadastro de movimentações (entrada/saída)
+- Listagem com filtros por data
+- Fechamento de caixa por período
+- Resumo financeiro por intervalo de datas
+- Validação de dados de entrada
+- Tratamento padronizado de erros
+- Precisão financeira com `Decimal`
+- Migrations com Flask-Migrate
+- Testes automatizados com Pytest
 
 ---
 
-## ▶️ Como executar
+## 🛠️ Tecnologias
+
+- Python
+- Flask
+- Flask-SQLAlchemy
+- Flask-Migrate
+- SQLite
+- Pytest
+
+---
+
+## 📂 Estrutura do Projeto
+app/
+├── models/
+├── routes/
+├── services/
+├── config.py
+├── errors.py
+├── extensions.py
+└── init.py
+
+tests/
+migrations/
+run.py
+requirements.txt
+
+
+---
+
+## 🧠 Arquitetura
+
+O projeto segue separação de responsabilidades:
+
+- **routes** → camada HTTP (entrada/saída)
+- **services** → regras de negócio
+- **models** → persistência
+- **errors** → padronização de respostas
+- **tests** → validação automatizada
+
+---
+
+## 💰 Regras de Negócio
+
+### Movimentação
+
+Campos obrigatórios:
+
+- `tipo`: `entrada` ou `saida`
+- `valor`: número positivo
+- `forma_pagamento`: obrigatório
+- `descricao`: opcional
+
+---
+
+### Fechamento de Caixa
+
+Requer:
+
+- `saldo_informado`
+- `data_inicio`
+- `data_fim`
+
+Calcula:
+
+- total de entradas
+- total de saídas
+- saldo esperado
+- diferença
+- resumo por forma de pagamento
+
+---
+
+### Resumo Financeiro
+
+Retorna:
+
+- período analisado
+- total de entradas
+- total de saídas
+- saldo final
+- agrupamento por forma de pagamento
+
+---
+
+## 📦 Instalação
 
 ### 1. Clonar o repositório
 
 ```bash
-git clone <seu-repo>
-cd cash-register-api
-```
+git clone https://github.com/SorayaCop/Cash-Register-api.git
+cd Cash-Register-api
 
----
-
-### 2. Criar ambiente virtual
-
-```bash
-python -m venv venv
-venv\Scripts\activate  # Windows
-```
-
----
-
-### 3. Instalar dependências
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-### 4. Criar banco de dados
-
-```bash
-python
-```
-
-```python
-from app import create_app
-from app.extensions import db
-from app.models.movimentacao import Movimentacao
-from app.models.fechamento import Fechamento
-
-app = create_app()
-
-with app.app_context():
-    db.create_all()
-```
-
----
-
-### 5. Rodar a aplicação
-
-```bash
-python run.py
-```
-
----
-
-## 📡 Endpoints
-
-### 🔹 Movimentações
-
-#### Criar movimentação
-
-`POST /movimentacoes`
-
-```json
-{
-  "tipo": "entrada",
-  "valor": 100,
-  "forma_pagamento": "dinheiro"
-}
-```
-
----
-
-#### Listar movimentações
-
-`GET /movimentacoes`
-
----
-
-### 🔹 Fechamento
-
-#### Realizar fechamento
-
-`POST /fechamentos`
-
-```json
-{
-  "saldo_informado": 80
-}
-```
-
----
-
-#### Listar fechamentos
-
-`GET /fechamentos`
-
----
-
-## 📁 Estrutura
-
-```
-app/
- ├── routes/
- ├── services/
- ├── models/
- ├── extensions.py
- └── __init__.py
-```
-
----
-
-## 🎯 Objetivo
-
-Este projeto foi desenvolvido para praticar:
-
-* construção de APIs REST
-* separação de responsabilidades (routes, services, models)
-* persistência de dados
-* implementação de regras de negócio
-
----
 
