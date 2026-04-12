@@ -1,39 +1,10 @@
 # Cash Register API
 
-API REST para controle de movimentações financeiras e fechamento de caixa, com validação de dados, regras de negócio, testes automatizados e histórico persistente.
-
-Este projeto foi desenvolvido com o objetivo de demonstrar habilidades reais de desenvolvimento backend com Flask, indo além de um CRUD simples.
+API REST para controle de movimentações financeiras, fechamento de caixa e geração de resumo financeiro por período.
 
 ---
 
-## 📌 Visão Geral
-
-A API simula o funcionamento de um sistema de caixa:
-
-- registro de entradas e saídas financeiras
-- filtragem por período
-- cálculo de fechamento de caixa
-- comparação entre saldo esperado e informado
-- resumo financeiro por forma de pagamento
-
----
-
-## 🚀 Funcionalidades
-
-- API versionada (`/api/v1`)
-- Cadastro de movimentações (entrada/saída)
-- Listagem com filtros por data
-- Fechamento de caixa por período
-- Resumo financeiro por intervalo de datas
-- Validação de dados de entrada
-- Tratamento padronizado de erros
-- Precisão financeira com `Decimal`
-- Migrations com Flask-Migrate
-- Testes automatizados com Pytest
-
----
-
-## 🛠️ Tecnologias
+## 📦 Tecnologias
 
 - Python
 - Flask
@@ -44,7 +15,8 @@ A API simula o funcionamento de um sistema de caixa:
 
 ---
 
-## 📂 Estrutura do Projeto
+## 📂 Estrutura
+
 app/
 ├── models/
 ├── routes/
@@ -62,67 +34,93 @@ requirements.txt
 
 ---
 
-## 🧠 Arquitetura
+## ⚙️ Setup
 
-O projeto segue separação de responsabilidades:
-
-- **routes** → camada HTTP (entrada/saída)
-- **services** → regras de negócio
-- **models** → persistência
-- **errors** → padronização de respostas
-- **tests** → validação automatizada
-
----
-
-## 💰 Regras de Negócio
-
-### Movimentação
-
-Campos obrigatórios:
-
-- `tipo`: `entrada` ou `saida`
-- `valor`: número positivo
-- `forma_pagamento`: obrigatório
-- `descricao`: opcional
-
----
-
-### Fechamento de Caixa
-
-Requer:
-
-- `saldo_informado`
-- `data_inicio`
-- `data_fim`
-
-Calcula:
-
-- total de entradas
-- total de saídas
-- saldo esperado
-- diferença
-- resumo por forma de pagamento
-
----
-
-### Resumo Financeiro
-
-Retorna:
-
-- período analisado
-- total de entradas
-- total de saídas
-- saldo final
-- agrupamento por forma de pagamento
-
----
-
-## 📦 Instalação
-
-### 1. Clonar o repositório
+### Clonar repositório
 
 ```bash
 git clone https://github.com/SorayaCop/Cash-Register-api.git
 cd Cash-Register-api
 
+Criar ambiente virtual
+python -m venv venv
+
+Ativar:
+
+Windows
+
+venv\Scripts\activate
+
+Linux/Mac
+
+source venv/bin/activate
+Instalar dependências
+pip install -r requirements.txt
+Configurar ambiente
+
+Criar .env:
+
+FLASK_DEBUG=True
+SECRET_KEY=change-this-secret-key
+DATABASE_URL=sqlite:///database.db
+Rodar migrations
+$env:FLASK_APP="run.py"
+flask db upgrade
+Executar API
+python run.py
+🔗 Base URL
+http://127.0.0.1:5000
+🩺 Health Check
+GET /health
+💰 Movimentações
+Criar movimentação
+POST /api/v1/movimentacoes
+{
+  "tipo": "entrada",
+  "valor": 100,
+  "forma_pagamento": "dinheiro",
+  "descricao": "Suprimento"
+}
+Listar movimentações
+GET /api/v1/movimentacoes
+
+Filtros opcionais:
+
+?data_inicio=YYYY-MM-DD
+&data_fim=YYYY-MM-DD
+🧾 Fechamento de Caixa
+Criar fechamento
+POST /api/v1/fechamentos
+{
+  "saldo_informado": 150,
+  "data_inicio": "2024-01-01",
+  "data_fim": "2030-01-01"
+}
+Listar fechamentos
+GET /api/v1/fechamentos
+📊 Resumo Financeiro
+GET /api/v1/resumo
+
+Exemplo:
+
+/api/v1/resumo?data_inicio=2024-01-01&data_fim=2030-01-01
+🔄 Padrão de Resposta
+Sucesso
+{
+  "success": true,
+  "message": "Operação realizada com sucesso",
+  "data": {}
+}
+Erro
+{
+  "success": false,
+  "error": {
+    "code": "invalid_value",
+    "message": "Valor inválido"
+  }
+}
+🧪 Testes
+pytest
+
+---
 
