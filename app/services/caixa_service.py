@@ -1,35 +1,81 @@
 from datetime import datetime, timedelta
+
+from app.errors import ApiError
 from app.extensions import db
-from app.models.movimentacao import Movimentacao
 from app.models.fechamento import Fechamento
+from app.models.movimentacao import Movimentacao
+
+
+def _parse_date(value, field_name):
+    try:
+        return datetime.strptime(value, "%Y-%m-%d")
+    except ValueError:
+        raise ApiError(
+            message=f"The field '{field_name}' must be in YYYY-MM-DD format.",
+            status_code=400,
+            error_code="invalid_date_format",
+        )
+
+
+def _parse_positive_value(value):
+    if value is None:
+        raise ApiError(
+            message="The field 'valor' is required.",
+            status_code=400,
+            error_code="missing_field",
+        )
+
+    try:
+        parsed_value = float(value)
+    except (TypeError, ValueError):
+        raise ApiError(
+            message="The field 'valor' must be a valid number.",
+            status_code=400,
+            error_code="invalid_value",
+        )
+
+    if parsed_value <= 0:
+        raise ApiError(
+            message="The field 'valor' must be greater than zero.",
+            status_code=400,
+            error_code="invalid_value",
+        )
+
+    return parsed_value
 
 
 def criar_movimentacao(data):
-    tipo = data.get("tipo")
-    valor = data.get("valor")
-    forma_pagamento = data.get("forma_pagamento")
-    descricao = data.get("descricao")
+    tipo = (data.get("tipo") or "").strip().lower()
+    forma_pagamento = (data.get("forma_pagamento") or "").strip()
+    descricao = (data.get("descricao") or "").strip() or None
+    valor = _parse_positive_value(data.get("valor"))
 
     if not tipo:
-        return {"erro": "O campo 'tipo' é obrigatório."}, 400
+        raise ApiError(
+            message="The field 'tipo' is required.",
+            status_code=400,
+            error_code="missing_field",
+        )
 
     if tipo not in ["entrada", "saida"]:
-        return {"erro": "O campo 'tipo' deve ser 'entrada' ou 'saida'."}, 400
-
-    if valor is None:
-        return {"erro": "O campo 'valor' é obrigatório."}, 400
-
-    if valor <= 0:
-        return {"erro": "O campo 'valor' deve ser maior que zero."}, 400
+        raise ApiError(
+            message="The field 'tipo' must be 'entrada' or 'saida'.",
+            status_code=400,
+            error_code="invalid_type",
+        )
 
     if not forma_pagamento:
-        return {"erro": "O campo 'forma_pagamento' é obrigatório."}, 400
+        raise ApiError(
+            message="The field 'forma_pagamento' is required.",
+            status_code=400,
+            error_code="missing_field",
+        )
 
     movimentacao = Movimentacao(
         tipo=tipo,
         valor=valor,
         forma_pagamento=forma_pagamento,
-        descricao=descricao
+        descricao=descricao,
     )
 
     db.session.add(movimentacao)
@@ -41,20 +87,27 @@ def criar_movimentacao(data):
         "valor": movimentacao.valor,
         "forma_pagamento": movimentacao.forma_pagamento,
         "descricao": movimentacao.descricao,
-        "criado_em": movimentacao.criado_em.isoformat()
-    }, 201
+        "criado_em": movimentacao.criado_em.isoformat(),
+    }
 
 
 def listar_movimentacoes(data_inicio=None, data_fim=None):
     query = Movimentacao.query
 
     if data_inicio:
-        data_inicio_obj = datetime.strptime(data_inicio, "%Y-%m-%d")
+        data_inicio_obj = _parse_date(data_inicio, "data_inicio")
         query = query.filter(Movimentacao.criado_em >= data_inicio_obj)
 
     if data_fim:
-        data_fim_obj = datetime.strptime(data_fim, "%Y-%m-%d") + timedelta(days=1)
+        data_fim_obj = _parse_date(data_fim, "data_fim") + timedelta(days=1)
         query = query.filter(Movimentacao.criado_em < data_fim_obj)
+
+    if data_inicio and data_fim and data_inicio_obj > data_fim_obj - timedelta(days=1):
+        raise ApiError(
+            message="'data_inicio' cannot be greater than 'data_fim'.",
+            status_code=400,
+            error_code="invalid_date_range",
+        )
 
     movimentacoes = query.order_by(Movimentacao.criado_em.desc()).all()
 
@@ -65,7 +118,7 @@ def listar_movimentacoes(data_inicio=None, data_fim=None):
             "valor": movimentacao.valor,
             "forma_pagamento": movimentacao.forma_pagamento,
             "descricao": movimentacao.descricao,
-            "criado_em": movimentacao.criado_em.isoformat()
+            "criado_em": movimentacao.criado_em.isoformat(),
         }
         for movimentacao in movimentacoes
     ]
@@ -73,7 +126,6 @@ def listar_movimentacoes(data_inicio=None, data_fim=None):
 
 def calcular_fechamento(saldo_informado):
     movimentacoes = Movimentacao.query.all()
-
     resumo_por_forma_pagamento = {}
 
     for movimentacao in movimentacoes:
@@ -107,7 +159,7 @@ def calcular_fechamento(saldo_informado):
         total_saida=total_saida,
         saldo_esperado=saldo_esperado,
         saldo_informado=saldo_informado,
-        diferenca=diferenca
+        diferenca=diferenca,
     )
 
     db.session.add(fechamento)
@@ -121,7 +173,7 @@ def calcular_fechamento(saldo_informado):
         "saldo_informado": fechamento.saldo_informado,
         "diferenca": fechamento.diferenca,
         "criado_em": fechamento.criado_em.isoformat(),
-        "resumo_por_forma_pagamento": resumo_por_forma_pagamento
+        "resumo_por_forma_pagamento": resumo_por_forma_pagamento,
     }
 
 
@@ -136,7 +188,7 @@ def listar_fechamentos():
             "saldo_esperado": f.saldo_esperado,
             "saldo_informado": f.saldo_informado,
             "diferenca": f.diferenca,
-            "criado_em": f.criado_em.isoformat()
+            "criado_em": f.criado_em.isoformat(),
         }
         for f in fechamentos
     ]
