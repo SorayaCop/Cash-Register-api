@@ -1,25 +1,36 @@
 from flask import Flask
-from app.routes.movimentacoes import movimentacoes_bp
-from app.routes.fechamentos import fechamentos_bp
+
+from app.config import Config
 from app.extensions import db
+from app.routes.fechamentos import fechamentos_bp
+from app.routes.movimentacoes import movimentacoes_bp
 
 
 def create_app():
     app = Flask(__name__)
-
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config.from_object(Config)
 
     db.init_app(app)
 
-    from app.models.movimentacao import Movimentacao
     from app.models.fechamento import Fechamento
+    from app.models.movimentacao import Movimentacao
 
-    @app.route("/")
+    @app.get("/")
     def home():
-        return {"message": "Cash Register API is running!"}
+        return {
+            "message": "Cash Register API is running!",
+            "version": "v1",
+            "docs_status": "pending"
+        }, 200
 
-    app.register_blueprint(movimentacoes_bp)
-    app.register_blueprint(fechamentos_bp)
+    @app.get("/health")
+    def health():
+        return {
+            "status": "ok",
+            "service": "cash-register-api"
+        }, 200
+
+    app.register_blueprint(movimentacoes_bp, url_prefix="/api/v1")
+    app.register_blueprint(fechamentos_bp, url_prefix="/api/v1")
 
     return app
