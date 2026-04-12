@@ -18,6 +18,8 @@ def fechar_caixa():
         )
 
     saldo_informado = data.get("saldo_informado")
+    data_inicio = data.get("data_inicio")
+    data_fim = data.get("data_fim")
 
     if saldo_informado is None:
         raise ApiError(
@@ -26,7 +28,18 @@ def fechar_caixa():
             error_code="missing_field",
         )
 
-    fechamento = calcular_fechamento(saldo_informado)
+    if not data_inicio or not data_fim:
+        raise ApiError(
+            message="Fields 'data_inicio' and 'data_fim' are required.",
+            status_code=400,
+            error_code="missing_field",
+        )
+
+    fechamento = calcular_fechamento(
+        saldo_informado=saldo_informado,
+        data_inicio=data_inicio,
+        data_fim=data_fim,
+    )
 
     return success_response(
         data=fechamento,
