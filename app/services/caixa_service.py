@@ -12,9 +12,9 @@ def _parse_date(value, field_name):
         return datetime.strptime(value, "%Y-%m-%d")
     except ValueError:
         raise ApiError(
-            message=f"The field '{field_name}' must be in YYYY-MM-DD format.",
-            status_code=400,
-            error_code="invalid_date_format",
+            f"The field '{field_name}' must be in YYYY-MM-DD format.",
+            400,
+            "invalid_date_format",
         )
 
 
@@ -74,6 +74,54 @@ def listar_movimentacoes(data_inicio=None, data_fim=None):
     return [m.to_dict() for m in movimentacoes]
 
 
+def gerar_resumo_financeiro(data_inicio, data_fim):
+    data_inicio = _parse_date(data_inicio, "data_inicio")
+    data_fim = _parse_date(data_fim, "data_fim") + timedelta(days=1)
+
+    movimentacoes = Movimentacao.query.filter(
+        Movimentacao.criado_em >= data_inicio,
+        Movimentacao.criado_em < data_fim
+    ).all()
+
+    if not movimentacoes:
+        raise ApiError("No data found for this period.", 404, "no_data")
+
+    resumo = {}
+
+    for m in movimentacoes:
+        resumo.setdefault(m.forma_pagamento, Decimal("0.00"))
+
+        if m.tipo == "entrada":
+            resumo[m.forma_pagamento] += m.valor
+        else:
+            resumo[m.forma_pagamento] -= m.valor
+
+    total_entrada = sum(
+        (m.valor for m in movimentacoes if m.tipo == "entrada"),
+        Decimal("0.00")
+    )
+
+    total_saida = sum(
+        (m.valor for m in movimentacoes if m.tipo == "saida"),
+        Decimal("0.00")
+    )
+
+    saldo = total_entrada - total_saida
+
+    return {
+        "periodo": {
+            "inicio": data_inicio.isoformat(),
+            "fim": data_fim.isoformat(),
+        },
+        "total_entrada": float(total_entrada),
+        "total_saida": float(total_saida),
+        "saldo": float(saldo),
+        "resumo_por_forma_pagamento": {
+            k: float(v) for k, v in resumo.items()
+        },
+    }
+
+
 def calcular_fechamento(saldo_informado, data_inicio, data_fim):
     try:
         saldo_informado = Decimal(str(saldo_informado))
@@ -89,11 +137,7 @@ def calcular_fechamento(saldo_informado, data_inicio, data_fim):
     ).all()
 
     if not movimentacoes:
-        raise ApiError(
-            "No transactions found in this period.",
-            404,
-            "no_data"
-        )
+        raise ApiError("No transactions found in this period.", 404, "no_data")
 
     resumo = {}
 
