@@ -22,7 +22,7 @@ def obter_movimentacoes():
 
 @movimentacoes_bp.route("/movimentacoes", methods=["POST"])
 def adicionar_movimentacao():
-    data = request.get_json()
+    data = request.get_json(silent=True)
 
     if not data:
         raise ApiError(

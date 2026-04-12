@@ -8,7 +8,7 @@ fechamentos_bp = Blueprint("fechamentos", __name__)
 
 @fechamentos_bp.route("/fechamentos", methods=["POST"])
 def fechar_caixa():
-    data = request.get_json()
+    data = request.get_json(silent=True)
 
     if not data:
         raise ApiError(

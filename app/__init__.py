@@ -3,7 +3,7 @@ from werkzeug.exceptions import BadRequest
 
 from app.config import Config
 from app.errors import ApiError, error_response
-from app.extensions import db
+from app.extensions import db, migrate
 from app.routes.fechamentos import fechamentos_bp
 from app.routes.movimentacoes import movimentacoes_bp
 
@@ -13,6 +13,7 @@ def create_app():
     app.config.from_object(Config)
 
     db.init_app(app)
+    migrate.init_app(app, db)
 
     from app.models.fechamento import Fechamento
     from app.models.movimentacao import Movimentacao
@@ -22,15 +23,11 @@ def create_app():
         return {
             "message": "Cash Register API is running!",
             "version": "v1",
-            "docs_status": "pending"
         }, 200
 
     @app.get("/health")
     def health():
-        return {
-            "status": "ok",
-            "service": "cash-register-api"
-        }, 200
+        return {"status": "ok"}, 200
 
     @app.errorhandler(ApiError)
     def handle_api_error(error):
@@ -46,22 +43,6 @@ def create_app():
             message="Invalid JSON payload.",
             status_code=400,
             error_code="invalid_json",
-        )
-
-    @app.errorhandler(404)
-    def handle_not_found(error):
-        return error_response(
-            message="Resource not found.",
-            status_code=404,
-            error_code="not_found",
-        )
-
-    @app.errorhandler(405)
-    def handle_method_not_allowed(error):
-        return error_response(
-            message="Method not allowed for this endpoint.",
-            status_code=405,
-            error_code="method_not_allowed",
         )
 
     @app.errorhandler(Exception)

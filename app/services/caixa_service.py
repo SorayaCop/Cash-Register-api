@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from decimal import Decimal, InvalidOperation
 
 from app.errors import ApiError
 from app.extensions import db
@@ -26,8 +27,8 @@ def _parse_positive_value(value):
         )
 
     try:
-        parsed_value = float(value)
-    except (TypeError, ValueError):
+        parsed_value = Decimal(str(value))
+    except (InvalidOperation, ValueError):
         raise ApiError(
             message="The field 'valor' must be a valid number.",
             status_code=400,
@@ -81,14 +82,7 @@ def criar_movimentacao(data):
     db.session.add(movimentacao)
     db.session.commit()
 
-    return {
-        "id": movimentacao.id,
-        "tipo": movimentacao.tipo,
-        "valor": movimentacao.valor,
-        "forma_pagamento": movimentacao.forma_pagamento,
-        "descricao": movimentacao.descricao,
-        "criado_em": movimentacao.criado_em.isoformat(),
-    }
+    return movimentacao.to_dict()
 
 
 def listar_movimentacoes(data_inicio=None, data_fim=None):
@@ -102,37 +96,41 @@ def listar_movimentacoes(data_inicio=None, data_fim=None):
         data_fim_obj = _parse_date(data_fim, "data_fim") + timedelta(days=1)
         query = query.filter(Movimentacao.criado_em < data_fim_obj)
 
-    if data_inicio and data_fim and data_inicio_obj > data_fim_obj - timedelta(days=1):
-        raise ApiError(
-            message="'data_inicio' cannot be greater than 'data_fim'.",
-            status_code=400,
-            error_code="invalid_date_range",
-        )
+    if data_inicio and data_fim:
+        data_inicio_obj = _parse_date(data_inicio, "data_inicio")
+        data_fim_obj = _parse_date(data_fim, "data_fim")
+
+        if data_inicio_obj > data_fim_obj:
+            raise ApiError(
+                message="'data_inicio' cannot be greater than 'data_fim'.",
+                status_code=400,
+                error_code="invalid_date_range",
+            )
 
     movimentacoes = query.order_by(Movimentacao.criado_em.desc()).all()
 
-    return [
-        {
-            "id": movimentacao.id,
-            "tipo": movimentacao.tipo,
-            "valor": movimentacao.valor,
-            "forma_pagamento": movimentacao.forma_pagamento,
-            "descricao": movimentacao.descricao,
-            "criado_em": movimentacao.criado_em.isoformat(),
-        }
-        for movimentacao in movimentacoes
-    ]
+    return [mov.to_dict() for mov in movimentacoes]
 
 
 def calcular_fechamento(saldo_informado):
+    try:
+        saldo_informado = Decimal(str(saldo_informado))
+    except (InvalidOperation, ValueError):
+        raise ApiError(
+            message="The field 'saldo_informado' must be a valid number.",
+            status_code=400,
+            error_code="invalid_value",
+        )
+
     movimentacoes = Movimentacao.query.all()
+
     resumo_por_forma_pagamento = {}
 
     for movimentacao in movimentacoes:
         forma = movimentacao.forma_pagamento
 
         if forma not in resumo_por_forma_pagamento:
-            resumo_por_forma_pagamento[forma] = 0
+            resumo_por_forma_pagamento[forma] = Decimal("0.00")
 
         if movimentacao.tipo == "entrada":
             resumo_por_forma_pagamento[forma] += movimentacao.valor
@@ -140,15 +138,13 @@ def calcular_fechamento(saldo_informado):
             resumo_por_forma_pagamento[forma] -= movimentacao.valor
 
     total_entrada = sum(
-        movimentacao.valor
-        for movimentacao in movimentacoes
-        if movimentacao.tipo == "entrada"
+        (mov.valor for mov in movimentacoes if mov.tipo == "entrada"),
+        Decimal("0.00"),
     )
 
     total_saida = sum(
-        movimentacao.valor
-        for movimentacao in movimentacoes
-        if movimentacao.tipo == "saida"
+        (mov.valor for mov in movimentacoes if mov.tipo == "saida"),
+        Decimal("0.00"),
     )
 
     saldo_esperado = total_entrada - total_saida
@@ -167,28 +163,19 @@ def calcular_fechamento(saldo_informado):
 
     return {
         "id": fechamento.id,
-        "total_entrada": fechamento.total_entrada,
-        "total_saida": fechamento.total_saida,
-        "saldo_esperado": fechamento.saldo_esperado,
-        "saldo_informado": fechamento.saldo_informado,
-        "diferenca": fechamento.diferenca,
+        "total_entrada": float(fechamento.total_entrada),
+        "total_saida": float(fechamento.total_saida),
+        "saldo_esperado": float(fechamento.saldo_esperado),
+        "saldo_informado": float(fechamento.saldo_informado),
+        "diferenca": float(fechamento.diferenca),
         "criado_em": fechamento.criado_em.isoformat(),
-        "resumo_por_forma_pagamento": resumo_por_forma_pagamento,
+        "resumo_por_forma_pagamento": {
+            k: float(v) for k, v in resumo_por_forma_pagamento.items()
+        },
     }
 
 
 def listar_fechamentos():
     fechamentos = Fechamento.query.order_by(Fechamento.criado_em.desc()).all()
 
-    return [
-        {
-            "id": f.id,
-            "total_entrada": f.total_entrada,
-            "total_saida": f.total_saida,
-            "saldo_esperado": f.saldo_esperado,
-            "saldo_informado": f.saldo_informado,
-            "diferenca": f.diferenca,
-            "criado_em": f.criado_em.isoformat(),
-        }
-        for f in fechamentos
-    ]
+    return [f.to_dict() for f in fechamentos]
